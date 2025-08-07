@@ -1,0 +1,93 @@
+{
+  "Environment": "nonprod",
+  "ResourceGroup": {
+    "Name": "ag-001",
+    "Location": "East US"
+  },
+  "VirtualNetwork": {
+    "Name": "vnet-appgw-nonprod",
+    "AddressPrefix": "10.0.0.0/16",
+    "SubnetName": "subnet-appgw",
+    "SubnetPrefix": "10.0.1.0/28"
+  },
+  "ApplicationGateway": {
+    "Name": "appgw-nonprod",
+    "Sku": {
+      "Name": "Standard_v2",
+      "Tier": "Standard_v2",
+      "Capacity": 2
+    },
+    "AutoscaleConfiguration": {
+      "MinCapacity": 1,
+      "MaxCapacity": 3
+    }
+  },
+  "PublicIP": {
+    "Name": "pip-appgw-nonprod",
+    "AllocationMethod": "Static",
+    "Sku": "Standard"
+  },
+  "FrontendIPConfiguration": {
+    "Name": "frontend-ip-config"
+  },
+  "FrontendPort": {
+    "Name": "frontend-port-80",
+    "Port": 80
+  },
+  "BackendAddressPools": [
+    {
+      "Name": "backend-pool-web",
+      "BackendAddresses": [
+        {
+          "IpAddress": "10.0.2.10"
+        },
+        {
+          "IpAddress": "10.0.2.11"
+        }
+      ]
+    }
+  ],
+  "BackendHttpSettings": [
+    {
+      "Name": "http-setting-web",
+      "Port": 80,
+      "Protocol": "Http",
+      "CookieBasedAffinity": "Disabled",
+      "RequestTimeout": 30,
+      "ProbeConfiguration": "health-probe-web"
+    }
+  ],
+  "HealthProbes": [
+    {
+      "Name": "health-probe-web",
+      "Protocol": "Http",
+      "Host": "127.0.0.1",
+      "Path": "/health",
+      "Interval": 30,
+      "Timeout": 30,
+      "UnhealthyThreshold": 3,
+      "MinServers": 0,
+      "Match": {
+        "StatusCodes": ["200-399"]
+      }
+    }
+  ],
+  "HttpListeners": [
+    {
+      "Name": "listener-web",
+      "FrontendIPConfiguration": "frontend-ip-config",
+      "FrontendPort": "frontend-port-80",
+      "Protocol": "Http"
+    }
+  ],
+  "RequestRoutingRules": [
+    {
+      "Name": "rule-web",
+      "RuleType": "Basic",
+      "HttpListener": "listener-web",
+      "BackendAddressPool": "backend-pool-web",
+      "BackendHttpSettings": "http-setting-web",
+      "Priority": 100
+    }
+  ]
+}

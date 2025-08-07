@@ -1,0 +1,150 @@
+{
+  "Environment": "prod",
+  "ResourceGroup": {
+    "Name": "rg-appgw-prod",
+    "Location": "East US 2"
+  },
+  "VirtualNetwork": {
+    "Name": "vnet-appgw-prod",
+    "AddressPrefix": "10.1.0.0/16",
+    "SubnetName": "subnet-appgw",
+    "SubnetPrefix": "10.1.1.0/24"
+  },
+  "ApplicationGateway": {
+    "Name": "appgw-prod",
+    "Sku": {
+      "Name": "Standard_v2",
+      "Tier": "Standard_v2",
+      "Capacity": 3
+    },
+    "AutoscaleConfiguration": {
+      "MinCapacity": 2,
+      "MaxCapacity": 10
+    }
+  },
+  "PublicIP": {
+    "Name": "pip-appgw-prod",
+    "AllocationMethod": "Static",
+    "Sku": "Standard"
+  },
+  "FrontendIPConfiguration": {
+    "Name": "frontend-ip-config"
+  },
+  "FrontendPort": [
+    {
+      "Name": "frontend-port-80",
+      "Port": 80
+    },
+    {
+      "Name": "frontend-port-443",
+      "Port": 443
+    }
+  ],
+  "BackendAddressPools": [
+    {
+      "Name": "backend-pool-web",
+      "BackendAddresses": [
+        {
+          "IpAddress": "10.1.2.10"
+        },
+        {
+          "IpAddress": "10.1.2.11"
+        },
+        {
+          "IpAddress": "10.1.2.12"
+        }
+      ]
+    },
+    {
+      "Name": "backend-pool-api",
+      "BackendAddresses": [
+        {
+          "IpAddress": "10.1.3.10"
+        },
+        {
+          "IpAddress": "10.1.3.11"
+        }
+      ]
+    }
+  ],
+  "BackendHttpSettings": [
+    {
+      "Name": "http-setting-web",
+      "Port": 80,
+      "Protocol": "Http",
+      "CookieBasedAffinity": "Disabled",
+      "RequestTimeout": 30,
+      "ProbeConfiguration": "health-probe-web"
+    },
+    {
+      "Name": "http-setting-api",
+      "Port": 443,
+      "Protocol": "Https",
+      "CookieBasedAffinity": "Disabled",
+      "RequestTimeout": 60,
+      "ProbeConfiguration": "health-probe-api"
+    }
+  ],
+  "HealthProbes": [
+    {
+      "Name": "health-probe-web",
+      "Protocol": "Http",
+      "Host": "127.0.0.1",
+      "Path": "/health",
+      "Interval": 30,
+      "Timeout": 30,
+      "UnhealthyThreshold": 3,
+      "MinServers": 0,
+      "Match": {
+        "StatusCodes": ["200-399"]
+      }
+    },
+    {
+      "Name": "health-probe-api",
+      "Protocol": "Https",
+      "Host": "api.company.com",
+      "Path": "/api/health",
+      "Interval": 30,
+      "Timeout": 30,
+      "UnhealthyThreshold": 3,
+      "MinServers": 0,
+      "Match": {
+        "StatusCodes": ["200-399"]
+      }
+    }
+  ],
+  "HttpListeners": [
+    {
+      "Name": "listener-web",
+      "FrontendIPConfiguration": "frontend-ip-config",
+      "FrontendPort": "frontend-port-80",
+      "Protocol": "Http"
+    },
+    {
+      "Name": "listener-api",
+      "FrontendIPConfiguration": "frontend-ip-config",
+      "FrontendPort": "frontend-port-443",
+      "Protocol": "Https",
+      "HostName": "api.company.com"
+    }
+  ],
+  "RequestRoutingRules": [
+    {
+      "Name": "rule-web",
+      "RuleType": "Basic",
+      "HttpListener": "listener-web",
+      "BackendAddressPool": "backend-pool-web",
+      "BackendHttpSettings": "http-setting-web",
+      "Priority": 100
+    },
+    {
+      "Name": "rule-api",
+      "RuleType": "Basic",
+      "HttpListener": "listener-api",
+      "BackendAddressPool": "backend-pool-api",
+      "BackendHttpSettings": "http-setting-api",
+      "Priority": 200
+    }
+  
+  ]
+}
